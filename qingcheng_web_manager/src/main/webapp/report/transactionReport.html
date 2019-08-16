@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>交易统计报表</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../css/elementui.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div id="app">
+    <!--<el-date-picker
+            v-model="dataRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            @change="fetchData()">
+    </el-date-picker>-->
+
+    <!--div存放echart图区域-->
+    <div id="main" style="width: 600px;height:400px;"></div>
+
+    <el-table
+            :data="tableData"
+            border
+            style="width: 100%">
+        <el-table-column
+                label="统计日期"
+                width="200">
+            <template slot-scope="scope">
+                <el-date-picker
+                        readonly
+                        value-format="yyyy-MM-dd"
+                        :placeholder="scope.row.countDate">
+                </el-date-picker>
+            </template>
+
+        </el-table-column>
+        <el-table-column
+                prop="uv"
+                label="浏览人数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderUserNum"
+                label="下单人数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderNum"
+                label="订单数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderPieceNum"
+                label="下单件数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="effectiveOrderNum"
+                label="有效订单数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderMoney"
+                label="下单金额"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="returnMoney"
+                label="退款金额"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payUserNum"
+                label="付款人数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payOrderNum"
+                label="付款订单数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payPieceNum"
+                label="付款件数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payMoney"
+                label="付款金额"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="atv"
+                label="客单价"
+                width="100">
+        </el-table-column>
+        <!--<el-table-column
+                label="销售量比例"
+                width="200">
+            <template slot-scope="scope">
+                {{(scope.row.num/totalNum*100).toFixed(0)}}%
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="销售额"
+                width="200">
+            <template slot-scope="scope">
+                {{(scope.row.money/100).toFixed(2)}}
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="销售额比例"
+                width="200">
+            <template slot-scope="scope">
+                {{(scope.row.money/totalMoney*100).toFixed(0)}}%
+            </template>
+        </el-table-column>-->
+    </el-table>
+</div>
+</body>
+<script src="/js/util.js"></script>
+<script src="/js/vue.js"></script>
+<script src="/js/axios.js"></script>
+<script src="/js/elementui.js"></script>
+<script src="/js/echarts.min.js"></script>
+<script>
+    new Vue({
+        el:"#app",
+        data(){
+            return {
+                tableData:[],
+                dataRange:[]
+            }
+        },
+
+        created(){
+            this.fetchData()
+        },
+        methods:{
+
+            fetchData(){
+
+                axios.get(`/transactionReport/transactionCount.do`).then(response =>{
+                    //处理时间格式:
+                    this.tableData = response.data;
+
+                    let payMoneyData = [] //付款金额
+                    let dateData = [] //统计日期
+                    let returnMoneyData = [] //退款金额
+                    let payUserNumData = [] //付款人数
+                    let payPieceNumData = [] //付款件数
+                    let orderRate = [] //下单转化率
+                    let payRate = [] //付款转化率
+                    let dealRate = [] //成交转化率
+                    for(let i = 0 ; i < this.tableData.length; i++){
+                        let dateStr = this.tableData[i].countDate+''
+                        dateData.push(formatDate(dateStr))
+                        this.tableData[i].countDate = formatDate(dateStr)
+                        payMoneyData.push(this.tableData[i].payMoney)
+                        returnMoneyData.push(this.tableData[i].returnMoney)
+                        payUserNumData.push(this.tableData[i].payUserNum)
+                        payPieceNumData.push(this.tableData[i].payPieceNum)
+
+                        orderRate.push((this.tableData[i].orderUserNum/this.tableData[i].uv).toFixed(2))//下单人数/浏览人数
+                        payRate.push((this.tableData[i].payUserNum/this.tableData[i].orderUserNum).toFixed(2)) //付款人数/下单人数
+                        dealRate.push((this.tableData[i].payUserNum/this.tableData[i].uv).toFixed(2))
+                    }
+
+
+                    let myChart = echarts.init(document.getElementById('main'))
+                    option = {
+                        title: {
+                            text: '交易统计图'
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'cross',
+                                label: {
+                                    backgroundColor: '#6a7985'
+                                }
+                            }
+                        },
+                        legend: {
+                            top:'25px',
+                            data:['付款金额','退款金额','付款人数','付款件数','下单转化率','付款转换率','成交转化率']
+                        },
+                        toolbox: {
+                            feature: {
+                                saveAsImage: {}
+                            }
+                        },
+                        grid: {
+                            left: '10%',
+                            right: '10%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        xAxis : [
+                            {
+                                type : 'category',
+                                boundaryGap : false,
+                                data : dateData
+                            }
+                        ],
+                        yAxis : [
+                            {
+                                type : 'value'
+                            }
+                        ],
+                        series : [
+                            {
+                                name:'付款金额',
+                                type:'line',
+                                stack: '总量',
+                                areaStyle: {},
+                                data:payMoneyData
+                            },
+                            {
+                                name:'退款金额',
+                                type:'line',
+                                stack: '总量',
+                                areaStyle: {},
+                                data:returnMoneyData
+                            },
+                            {
+                                name:'付款人数',
+                                type:'line',
+                                stack: '总量',
+                                areaStyle: {},
+                                data:payUserNumData
+                            },
+                            {
+                                name:'付款件数',
+                                type:'line',
+                                stack: '总量',
+                                areaStyle: {normal: {}},
+                                data:payPieceNumData
+                            },
+                            {
+                                name:'下单转化率',
+                                type:'line',
+                                stack: '总量',
+                                areaStyle: {normal: {}},
+                                data:orderRate
+                            },
+                            {
+                                name:'付款转化率',
+                                type:'line',
+                                stack: '总量',
+                                areaStyle: {normal: {}},
+                                data:payRate
+                            },
+                            {
+                                name:'成交转化率',
+                                type:'line',
+                                stack: '总量',
+                                areaStyle: {normal: {}},
+                                data:dealRate
+                            }
+
+                        ]
+                    };
+                    myChart.setOption(option)
+                })
+            }
+        }
+    })
+
+    function formatDate(date) {
+        var d = new Date(date),
+            month = '' + (d.getMonth() + 1),
+            day = '' + d.getDate(),
+            year = d.getFullYear();
+
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+
+        return [year, month, day].join('-');
+    }
+</script>
+</html>

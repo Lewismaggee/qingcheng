@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>修改密码</title>
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../css/elementui.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="content-header">
+            <h1>管理<small>修改密码</small></h1>
+            <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+                <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                <el-breadcrumb-item>管理</el-breadcrumb-item>
+                <el-breadcrumb-item>修改密码</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+        <div class="app-container">
+            <el-form action="">
+                <el-form-item label="原密码" prop="pass">
+                    <el-input type="password" v-model="searchMap.oldPwd" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="新密码" prop="pass">
+                    <el-input type="password" v-model="searchMap.newPwd" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="确认密码" prop="checkPass">
+                    <el-input type="password" v-model="searchMap.confirmPwd" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary"  class="butT" @click="save()">提交</el-button>
+                </el-form-item>
+            </el-form>
+
+        </div>
+
+    </div>
+</body>
+<script src="/js/vue.js"></script>
+<script src="/js/axios.js"></script>
+<script src="/js/elementui.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data(){
+            return{
+                searchMap:{}
+            }
+        },
+        methods:{
+            save(){
+                let oldPwd = this.searchMap.oldPwd
+                let confirmPwd = this.searchMap.confirmPwd
+                if(oldPwd != confirmPwd){
+                    this.$alert("两次密码输入不一致")
+                }else{
+                    axios.post(`/admin/updatePwd.do`,this.searchMap).then(response =>{
+                        if(response.data.code==1){
+                            this.$alert("原密码输入不正确")
+                        }else{
+                            this.$alert("修改成功,请重新登录")
+                            location.href = "/login.html"
+                        }
+                    })
+                }
+            }
+        }
+    })
+</script>
+</html>

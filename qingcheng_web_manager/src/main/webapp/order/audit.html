@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>商品审核</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../css/elementui.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div id="app">
+    <div class="content-header">
+        <h1>管理<small>order管理</small></h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>管理</el-breadcrumb-item>
+            <el-breadcrumb-item>order管理</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+
+    <div class="app-container">
+        <div class="box">
+            <div class="filter-container">
+                <!--查询表单-->
+                <el-form :inline="true" >
+                    <el-form-item label="商品名称">
+                        <el-input v-model="searchMap.name" placeholder="商品名称" class="filter-item" ></el-input></el-form-item>
+
+                    <el-button class="dalfBut" @click="fetchData()">查询</el-button>
+                    <el-button type="primary"  class="butT" @click="formVisible=true;pojo={}">新增</el-button>
+                </el-form>
+            </div>
+
+
+            <el-table :data="tableData" border style="width: 100%">
+                <el-table-column prop="id" label="订单id" width="80"></el-table-column>
+                <el-table-column prop="totalNum" label="数量合计" width="80"></el-table-column>
+                <el-table-column prop="totalMoney" label="金额合计" width="80"></el-table-column>
+                <el-table-column prop="preMoney" label="优惠金额" width="80"></el-table-column>
+
+                <el-table-column
+                        label="操作"  >
+                    <template slot-scope="scope">
+                        <el-button @click="edit(scope.row.id)" size="mini" type="primary" size="small">修改</el-button>
+                        <el-button @click="dele(scope.row.id)" size="mini" type="danger" size="small">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+    </div>
+
+
+</div>
+</body>
+</html>

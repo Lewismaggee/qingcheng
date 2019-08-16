@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>交易统计报表</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../css/elementui.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div id="app">
+    <!--<el-date-picker
+            v-model="dataRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            @change="fetchData()">
+    </el-date-picker>-->
+
+    <!--div存放echart图区域-->
+    <div id="main" style="width: 600px;height:400px;"></div>
+
+    <el-table
+            :data="tableData"
+            border
+            style="width: 100%">
+        <el-table-column
+                label="统计日期"
+                width="200">
+            <template slot-scope="scope">
+                <el-date-picker
+                        readonly
+                        value-format="yyyy-MM-dd"
+                        :placeholder="scope.row.countDate">
+                </el-date-picker>
+            </template>
+
+        </el-table-column>
+        <el-table-column
+                prop="uv"
+                label="浏览人数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderUserNum"
+                label="下单人数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderNum"
+                label="订单数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderPieceNum"
+                label="下单件数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="effectiveOrderNum"
+                label="有效订单数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="orderMoney"
+                label="下单金额"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="returnMoney"
+                label="退款金额"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payUserNum"
+                label="付款人数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payOrderNum"
+                label="付款订单数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payPieceNum"
+                label="付款件数"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="payMoney"
+                label="付款金额"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="atv"
+                label="客单价"
+                width="100">
+        </el-table-column>
+        <!--<el-table-column
+                label="销售量比例"
+                width="200">
+            <template slot-scope="scope">
+                {{(scope.row.num/totalNum*100).toFixed(0)}}%
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="销售额"
+                width="200">
+            <template slot-scope="scope">
+                {{(scope.row.money/100).toFixed(2)}}
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="销售额比例"
+                width="200">
+            <template slot-scope="scope">
+                {{(scope.row.money/totalMoney*100).toFixed(0)}}%
+            </template>
+        </el-table-column>-->
+    </el-table>
+</div>
+</body>
+<script src="/js/util.js"></script>
+<script src="/js/vue.js"></script>
+<script src="/js/axios.js"></script>
+<script src="/js/elementui.js"></script>
+<script src="/js/echarts.min.js"></script>
+<script>
+    new Vue({
+        el:"#app",
+        data(){
+            return {
+                tableData:[],
+                dataRange:[],
+                uvCount: 0, //浏览
+                orderCount :0,//下单
+                payAmount: 0 //付款
+            }
+        },
+
+        created(){
+            this.fetchData()
+        },
+        methods:{
+            fetchData(){
+                axios.get(`/transactionReport/transactionCount2.do`).then(response =>{
+                    //处理时间格式:
+                    this.tableData = response.data;
+
+                    let viewData = []
+
+                    viewData.push({value:this.tableData[0].uv,name:'浏览'})
+                    viewData.push({value:(this.tableData[0].orderUserNum/this.tableData[0].uv).toFixed(2),name:'下单'})
+                    viewData.push({value:(this.tableData[0].payUserNum/this.tableData[0].orderUserNum).toFixed(2),name:'付款'})
+
+                    let myChart = echarts.init(document.getElementById('main'))
+                    option = {
+                        title: {
+                            text: '交易统计图',
+                            subtext: ''
+                        },
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: "{a} <br/>{b} : {c}%"
+                        },
+                        toolbox: {
+                            feature: {
+                                dataView: {readOnly: false},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        legend: {
+                            data: ['浏览','下单','付款']
+                        },
+                        calculable: true,
+                        series: [
+                            {
+                                name:'漏斗图',
+                                type:'funnel',
+                                left: '10%',
+                                top: 60,
+                                //x2: 80,
+                                bottom: 60,
+                                width: '80%',
+                                // height: {totalHeight} - y - y2,
+                                min: 0,
+                                max: 100,
+                                minSize: '0%',
+                                maxSize: '100%',
+                                sort: 'descending',
+                                gap: 2,
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                labelLine: {
+                                    length: 10,
+                                    lineStyle: {
+                                        width: 1,
+                                        type: 'solid'
+                                    }
+                                },
+                                itemStyle: {
+                                    borderColor: '#fff',
+                                    borderWidth: 1
+                                },
+                                emphasis: {
+                                    label: {
+                                        fontSize: 20
+                                    }
+                                },
+                                data: viewData
+                            }
+                        ]
+                    };
+
+                    myChart.setOption(option)
+                })
+            }
+        }
+    })
+
+
+</script>
+</html>

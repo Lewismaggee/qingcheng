@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>transactionReport管理</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../css/elementui.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- 上传图片框样式，不使用上传组件可以删除此样式 -->
+    <style>
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 150px;
+            height: 70px;
+            line-height: 150px;
+            text-align: center;
+        }
+        .avatar {
+            width: 150px;
+            height: 70px;
+            display: block;
+        }
+
+    </style>
+</head>
+<body class="hold-transition">
+<div id="app">
+
+    <div class="content-header">
+        <h1>管理<small>transactionReport管理</small></h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>管理</el-breadcrumb-item>
+            <el-breadcrumb-item>transactionReport管理</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+
+    <div class="app-container">
+        <div class="box">
+            <div class="filter-container">
+                <!--查询表单-->
+                <el-form :inline="true" >
+                          <el-form-item label="浏览人数">
+<el-input v-model="searchMap.uv" placeholder="浏览人数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="下单人数">
+<el-input v-model="searchMap.orderUserNum" placeholder="下单人数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="订单数">
+<el-input v-model="searchMap.orderNum" placeholder="订单数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="下单件数">
+<el-input v-model="searchMap.orderPieceNum" placeholder="下单件数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="有效订单数">
+<el-input v-model="searchMap.effectiveOrderNum" placeholder="有效订单数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="下单金额">
+<el-input v-model="searchMap.orderMoney" placeholder="下单金额" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="退款金额">
+<el-input v-model="searchMap.returnMoney" placeholder="退款金额" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="付款人数">
+<el-input v-model="searchMap.payUserNum" placeholder="付款人数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="付款订单数">
+<el-input v-model="searchMap.payOrderNum" placeholder="付款订单数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="付款件数">
+<el-input v-model="searchMap.payPieceNum" placeholder="付款件数" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="付款金额">
+<el-input v-model="searchMap.payMoney" placeholder="付款金额" class="filter-item" ></el-input></el-form-item>
+          <el-form-item label="客单价">
+<el-input v-model="searchMap.atv" placeholder="客单价" class="filter-item" ></el-input></el-form-item>
+
+                <el-button class="dalfBut" @click="fetchData()">查询</el-button>
+                <el-button type="primary"  class="butT" @click="formVisible=true;pojo={}">新增</el-button>
+                </el-form>
+            </div>
+
+            <el-table :data="tableData" border style="width: 100%">
+                          <el-table-column prop="countDate" label="统计日期" width="80"></el-table-column>
+          <el-table-column prop="uv" label="浏览人数" width="80"></el-table-column>
+          <el-table-column prop="orderUserNum" label="下单人数" width="80"></el-table-column>
+          <el-table-column prop="orderNum" label="订单数" width="80"></el-table-column>
+          <el-table-column prop="orderPieceNum" label="下单件数" width="80"></el-table-column>
+          <el-table-column prop="effectiveOrderNum" label="有效订单数" width="80"></el-table-column>
+          <el-table-column prop="orderMoney" label="下单金额" width="80"></el-table-column>
+          <el-table-column prop="returnMoney" label="退款金额" width="80"></el-table-column>
+          <el-table-column prop="payUserNum" label="付款人数" width="80"></el-table-column>
+          <el-table-column prop="payOrderNum" label="付款订单数" width="80"></el-table-column>
+          <el-table-column prop="payPieceNum" label="付款件数" width="80"></el-table-column>
+          <el-table-column prop="payMoney" label="付款金额" width="80"></el-table-column>
+          <el-table-column prop="atv" label="客单价" width="80"></el-table-column>
+
+                    <el-table-column
+                            label="操作"  >
+                        <template slot-scope="scope">
+                            <el-button @click="edit(scope.row.countDate)" size="mini" type="primary" size="small">修改</el-button>
+                            <el-button @click="dele(scope.row.countDate)" size="mini" type="danger" size="small">删除</el-button>
+                        </template>
+                    </el-table-column>
+            </el-table>
+            <div class="pagination-container">
+                <el-pagination
+                        class="pagiantion"
+                        @size-change="fetchData"
+                        @current-change="fetchData"
+                        :current-page.sync="currentPage"
+                        :page-sizes="[10, 20, 30, 40]"
+                        :page-size.sync="size"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total">
+                </el-pagination>
+            </div>
+            <div class="add-form">
+                <!--弹出窗口-->
+                <el-dialog  title="编辑" :visible.sync="formVisible" >
+                    <el-form label-width="80px">
+                                <el-form-item label="浏览人数"><el-input v-model="pojo.uv"></el-input></el-form-item>
+        <el-form-item label="下单人数"><el-input v-model="pojo.orderUserNum"></el-input></el-form-item>
+        <el-form-item label="订单数"><el-input v-model="pojo.orderNum"></el-input></el-form-item>
+        <el-form-item label="下单件数"><el-input v-model="pojo.orderPieceNum"></el-input></el-form-item>
+        <el-form-item label="有效订单数"><el-input v-model="pojo.effectiveOrderNum"></el-input></el-form-item>
+        <el-form-item label="下单金额"><el-input v-model="pojo.orderMoney"></el-input></el-form-item>
+        <el-form-item label="退款金额"><el-input v-model="pojo.returnMoney"></el-input></el-form-item>
+        <el-form-item label="付款人数"><el-input v-model="pojo.payUserNum"></el-input></el-form-item>
+        <el-form-item label="付款订单数"><el-input v-model="pojo.payOrderNum"></el-input></el-form-item>
+        <el-form-item label="付款件数"><el-input v-model="pojo.payPieceNum"></el-input></el-form-item>
+        <el-form-item label="付款金额"><el-input v-model="pojo.payMoney"></el-input></el-form-item>
+        <el-form-item label="客单价"><el-input v-model="pojo.atv"></el-input></el-form-item>
+
+                            <!-- 图片上传代码 如页面有图片上传功能放开注释 ****
+                            <el-form-item label="图片">
+                                <el-upload
+                                        class="avatar-uploader"
+                                        action="/upload/native.do"
+                                        :show-file-list="false"
+                                        :on-success="handleAvatarSuccess"
+                                        :before-upload="beforeAvatarUpload">
+                                    <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                                </el-upload>
+                            </el-form-item>
+                            -->
+
+                            <el-form-item>
+                                <el-button type="primary" @click="save()">保存</el-button>
+                                <el-button @click="formVisible = false" >关闭</el-button>
+                            </el-form-item>
+                    </el-form>
+                </el-dialog>
+            </div>
+
+        </div>
+    </div>
+
+
+</div>
+</body>
+<script src="/js/vue.js"></script>
+<script src="/js/axios.js"></script>
+<script src="/js/elementui.js"></script>
+<script>
+     new Vue({
+        el: '#app',
+        data(){
+            return {
+                tableData: [],
+                currentPage: 1,
+                total: 10,
+                size: 10,
+                searchMap: {},
+                pojo: {},
+                formVisible: false,
+                imageUrl: ''
+            }
+        },
+        created(){
+            this.fetchData();
+        },
+        methods:{
+            fetchData (){
+                axios.post(`/transactionReport/findPage.do?page=${this.currentPage}&size=${this.size}`,this.searchMap).then(response => {
+                    this.tableData = response.data.rows;
+                    this.total = response.data.total;
+                });
+            },
+            save (){
+                // this.pojo.image= this.imageUrl; //如页面有图片上传功能放开注释
+                axios.post(`/transactionReport/${this.pojo.countDate==null?'add':'update'}.do`,this.pojo).then(response => {
+                    this.fetchData (); //刷新列表
+                    this.formVisible = false ;//关闭窗口
+                });
+            },
+            edit (countDate){
+                this.formVisible = true // 打开窗口
+                // 调用查询
+                axios.get(`/transactionReport/findById.do?countDate=${countDate}`).then(response => {
+                    this.pojo = response.data;
+                    // this.imageUrl=this.pojo.image //显示图片  如页面有图片上传功能放开注释
+                })
+            },
+            dele (countDate){
+                this.$confirm('确定要删除此记录吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then( () => {
+                    axios.get(`/transactionReport/delete.do?countDate=${countDate}`).then(response => {
+                        this.fetchData (); //刷新列表
+                    })
+                })
+            },
+			/* ****图片上传相关代码  如页面有图片上传功能放开注释 **** 
+            handleAvatarSuccess(res, file) {
+                this.imageUrl = file.response;
+            },
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            }*/
+        }
+    })
+</script>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>图片列表</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../css/elementui.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 150px;
+            height: 70px;
+            line-height: 150px;
+            text-align: center;
+        }
+        .avatar {
+            width: 150px;
+            height: 70px;
+            display: block;
+        }
+
+    </style>
+</head>
+<body class="hold-transition">
+    <div id="app">
+        <div class="content-header">
+            <h1>管理<small>相册管理</small></h1>
+            <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+                <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                <el-breadcrumb-item>管理</el-breadcrumb-item>
+                <el-breadcrumb-item>相册管理</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+
+
+        <el-table :data="imageIds" border style="width: 100%">
+            <el-table-column label="相片列表" width="130px">
+                <template slot-scope="scope">
+                    <img :src="scope.row" width="130px" height="70px">
+                    <el-button type="text"  class="butT" @click="del(scope.row)">删除</el-button>
+                </template>
+
+            </el-table-column>
+
+        </el-table>
+        <el-button type="primary"  class="butT" @click="formVisible=true;imageUrl='';pojo={id:imageId}">新增</el-button>
+
+        <!--<div class="app-container">
+            <div class="box">
+                <div class="filter-container">
+                    <div v-for="url in imageIds">
+                        <img v-bind:src="url" width="200px" height="100px">
+                    </div>
+                    <el-button type="primary"  class="butT" @click="formVisible=true;imageUrl='';pojo={id:imageId}">新增</el-button>
+                    <el-button type="primary"  class="butT" @click="formVisible=true;imageUrl='';pojo={id:imageId}">删除</el-button>
+                </div>
+            </div>
+        </div>-->
+        <div class="add-form">
+        <el-dialog  title="上传图片" :visible.sync="formVisible" >
+            <el-form label-width="80px">
+                <el-form-item label="图片">
+                    <el-upload
+                            class="avatar-uploader"
+                            action="/upload/native.do"
+                            :show-file-list="false"
+                            :on-success="handleAvatarSuccess"
+                            :before-upload="beforeAvatarUpload">
+                        <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                    </el-upload>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="save()">保存</el-button>
+                    <el-button @click="formVisible = false" >关闭</el-button>
+                </el-form-item>
+            </el-form>
+        </el-dialog>
+        </div>
+
+
+
+
+    </div>
+</body>
+<script src="/js/vue.js"></script>
+<script src="/js/axios.js"></script>
+<script src="/js/elementui.js"></script>
+<script src="/js/util.js"></script>
+<script>
+    new Vue({
+        el: "#app",
+        data(){
+            return {
+                imageList: {},
+                pojo:{},
+                imageId:'',
+                imageIds:[],
+                formVisible: false,
+                imageUrl: ''
+            }
+        },
+        created(){
+            this.imageId = getQueryString('id');
+
+            this.fetchData();
+        },
+        methods: {
+            fetchData() {
+                axios.get(`/album/findById.do?id=${this.imageId}`).then(response => {
+                    this.imageIds=[]
+                    this.pojo = response.data;
+                    this.imageList=JSON.parse(this.pojo.imageItems);
+                    for(let i = 0 ; i < this.imageList.length ; i++){
+                        this.imageIds.push(this.imageList[i].url)
+                    }
+                });
+            },
+            save (){
+                this.pojo.imageItems= this.imageUrl; //如页面有图片上传功能放开注释
+                axios.post(`/album/updateImageItems.do`,this.pojo).then(response => {
+                    this.fetchData (); //刷新列表
+                    this.formVisible = false ;//关闭窗口
+                });
+            },
+            del(url){
+                this.pojo.imageItems = url;
+                this.pojo.id = this.imageId;
+                axios.post(`/album/delImage.do`,this.pojo).then(response =>{
+                    if(response.data.code == 0){
+                        this.fetchData()
+                    }else{
+                        this.$alert("删除失败")
+                    }
+
+                })
+            },
+            handleAvatarSuccess(res, file) {
+                this.imageUrl = file.response;
+            },
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            }
+        }
+    })
+</script>
+</html>
